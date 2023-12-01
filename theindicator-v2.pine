@@ -1,0 +1,142 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Author: dkovache
+
+//@version=5
+indicator("theIndicator-v2", overlay=true)
+
+// Predefined variables
+var longColor = color.green
+var shortColor = color.red
+
+// Adguments which can be changes from GUI
+st1_length = input.int(12, "ST1 ATR Period", minval=1)
+st1_mult = input.float(3.0, "ST1 ATR Multiplier", step=0.1, minval=0.1)
+st1_src = input(hl2, "Source")
+st1_wicks = input(true, "Take Wicks into Account ?")
+st1_showLabels = input(true, "Show Buy/Sell Labels ?")
+st1_highlightState = input(true, "Highlight State ?")
+
+
+
+
+averageTrueRange(multiplier, atrPeriod) =>
+    result = multiplier * ta.atr(atrPeriod)
+    result
+
+highPrice(wicks) =>
+    result = wicks ? high : close
+    result
+
+lowPrice(wicks) => 
+    result = wicks ? low : close
+    result
+
+dojiCandle() =>
+    result = open == close and open == low and open == high
+    result
+
+longStop(src, averageTrueRange) =>
+    result = src - averageTrueRange
+    result
+
+longStopPrev(longStop) =>
+    result = nz(longStop[1], longStop)
+    result
+
+updateLongStop(src, wicks, multiplier, atrPeriod) =>
+    atrValue = averageTrueRange(multiplier, atrPeriod)
+    currentLongStop = longStop(src, atrValue)
+    prevLongStop = longStopPrev(currentLongStop)
+    if currentLongStop > 0
+        if dojiCandle()
+            prevLongStop
+        else
+            lowPrice1 = lowPrice(wicks)[1]
+            result = (lowPrice1 > prevLongStop ? math.max(currentLongStop, prevLongStop) : currentLongStop)
+            result
+    else
+        prevLongStop
+
+
+shortStop(src, averageTrueRange) =>
+    result = src + averageTrueRange
+    result
+
+shortStopPrev(shortStop) =>
+    result = nz(shortStop[1], shortStop)
+    result
+
+updateShortStop(src, wicks, multiplier, atrPeriod) =>
+    atrValue = averageTrueRange(multiplier, atrPeriod)
+    currentShortStop = shortStop(src, atrValue)
+    prevShortStop = shortStopPrev(currentShortStop)
+    if currentShortStop > 0
+        if dojiCandle()
+            prevShortStop
+        else
+            highPrice1 = highPrice(wicks)[1]
+            result = (highPrice1 < prevShortStop ? math.min(currentShortStop, prevShortStop) : currentShortStop)
+            result
+    else
+        prevShortStop
+
+
+var int dir = 1
+
+// Define your function
+calculateAndPlot(dir, highPrice, lowPrice, shortStopPrev, longStopPrev, longStop, shortStop, showLabels, highlightState) =>
+    // Update direction
+    dir := dir == -1 and highPrice > shortStopPrev ? 1 :
+           dir == 1 and lowPrice < longStopPrev ? -1 :
+           dir
+
+    // Plotting logic
+    longColor = color.green
+    shortColor = color.red
+    longStopPlot = plot(dir == 1 ? longStop : na, "Long Stop", plot.style_linebr, 2, longColor)
+    shortStopPlot = plot(dir == 1 ? na : shortStop, "Short Stop", plot.style_linebr, 2, shortColor)
+
+    buySignal = dir == 1 and dir[1] == -1
+    sellSignal = dir == -1 and dir[1] == 1
+    if showLabels
+        if buySignal
+            plotshape(longStop, "Buy Signal", location.absolute, shape.circle, size.tiny, longColor, 0, longStop)
+            plotshape(longStop, "Buy Label", location.absolute, shape.labelup, size.tiny, longColor, color.white, 0, "Buy")
+        if sellSignal
+            plotshape(shortStop, "Sell Signal", location.absolute, shape.circle, size.tiny, shortColor, 0, shortStop)
+            plotshape(shortStop, "Sell Label", location.absolute, shape.labeldown, size.tiny, shortColor, color.white, 0, "Sell")
+
+    midPricePlot = plot(ohlc4, "", plot.style_circles, 0, na, display.none)
+    longFillColor = highlightState and dir == 1 ? color.new(longColor, 90) : na
+    shortFillColor = highlightState and dir == -1 ? color.new(shortColor, 90) : na
+    fill(midPricePlot, longStopPlot, longFillColor)
+    fill(midPricePlot, shortStopPlot, shortFillColor)
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================= EMA 200
+
+longest = ta.ema(close, 200)
+var color emaColor = color.blue
+plot(longest, color = emaColor)
