@@ -1,0 +1,124 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Author: dkovache
+
+//@version=5
+strategy("ITI", overlay=true)
+import TradingView/ta/5
+import mentalRock19315/Slope_TK/1 as TK
+
+// Input period and multiplier
+st1_period = input(defval = 12, title = "Period of the first ST")
+st1_multiplier = input(defval = 3, title = "Multiplier of the first ST")
+
+st2_period = input(defval = 10, title = "Period of the second ST")
+st2_multiplier = input(defval = 1, title = "Multiplier of the second ST")
+
+st3_period = input(defval = 11, title = "Period of the third ST")
+st3_multiplier = input(defval = 2, title = "Multiplier of the third ST")
+
+
+// Setting the three timeframes for analytica
+deep_tf = input(defval=60, title="First layer of depth (minutes)", tooltip = "Strong trend timeframe")
+
+// main indicators on curent TF
+[trend1, direction1] = ta.supertrend(st1_multiplier, st1_period)
+[trend2, direction2] = ta.supertrend(st2_multiplier, st2_period)
+[trend3, direction3] = ta.supertrend(st3_multiplier, st3_period)
+
+// main indicators on strong TF
+[trend1_strong, direction1_strong] = request.security(syminfo.tickerid, str.tostring(deep_tf), ta.supertrend(st1_multiplier, st1_period))
+[trend2_strong, direction2_strong] = request.security(syminfo.tickerid, str.tostring(deep_tf), ta.supertrend(st2_multiplier, st2_period))
+[trend3_strong, direction3_strong] = request.security(syminfo.tickerid, str.tostring(deep_tf), ta.supertrend(st3_multiplier, st3_period))
+
+// High level trend
+ema_long_term = ta.ema(close, 100)
+
+
+// Plot Super Trends
+plot(direction1 < 0 ? trend1 : na, "Up direction", color.green, style = plot.style_linebr, linewidth = 2)  // 1
+plot(direction1 > 0 ? trend1 : na, "Down direction", color.red, style = plot.style_linebr, linewidth = 2)
+
+plot(direction2 < 0 ? trend2 : na, "Up direction", color.green, style = plot.style_linebr, linewidth = 2)  // 2
+plot(direction2 > 0 ? trend2 : na, "Down direction", color.red, style = plot.style_linebr, linewidth = 2)
+
+plot(direction3 < 0 ? trend3 : na, "Up direction", color.green, style = plot.style_linebr, linewidth = 2)  // 3
+plot(direction3 > 0 ? trend3 : na, "Down direction", color.red, style = plot.style_linebr, linewidth = 2)
+
+// Plot EMA long term
+plot(ema_long_term, color = color.yellow)
+
+
+// Calculate the average slope of the SuperTrend 
+nr_of_bars = input.int(2, "Number of bars to calculate the slope", minval=1, step=1)
+slope = TK.slope(trend3, nr_of_bars)
+log.info(str.tostring(slope))
+
+
+sellColor = #e4a256
+buyColor = #9ce0cc
+
+
+// ===========================================  MAIN timeframe analyze =======================
+var activePosition = false
+var activeColor = color.blue
+var activeColorPrevState = color.blue
+
+var isOpenPosition = false
+var isPositionLong = false
+
+activeColorPrevState := activeColor
+
+if direction1 > 0 and direction2 > 0 and direction3 > 0
+    activeColor := color.red
+    activePosition := true
+else if direction1 < 0 and direction2 < 0 and direction3 < 0
+    activeColor := color.green
+    activePosition := true
+else
+    activeColor := color.blue
+    activePosition := false
+ 
+plot( slope, title = "Slope", color=activeColor, linewidth = 3)
+bgcolor(activePosition == true and activeColor == color.green ? color.new(color.green,80) : na )
+bgcolor(activePosition == true and activeColor == color.red ? color.new(color.red,80) : na )
+
+
+// Alerts
+if activePosition == false and activeColor != activeColorPrevState and activeColorPrevState == color.red
+    isOpenPosition := false    
+    alert("Close SHORT position on MAIN TIMEFRAME", alert.freq_once_per_bar)
+if activePosition == false and activeColor != activeColorPrevState and activeColorPrevState == color.green
+    isOpenPosition := false
+    alert("Close LONG position on MAIN TIMEFRAME", alert.freq_once_per_bar)
+if activePosition == true and activeColor != activeColorPrevState and activeColor == color.red
+    isOpenPosition := true
+    isPositionLong := false
+    alert("Open SHORT position on MAIN TIMEFRAME", alert.freq_once_per_bar)
+if activePosition == true and activeColor != activeColorPrevState and activeColor == color.green
+    isOpenPosition := true
+    isPositionLong := true
+    alert("Open LONG position on MAIN TIMEFRAME", alert.freq_once_per_bar)
+
+// ============================================ Secondary timeframe analyze ===============================
+
+if isOpenPosition
+    if isPositionLong == false and direction1_strong <= 0 and direction2_strong > 0 and direction3_strong > 0
+        alert("Light underlying indication to close opned SHORT position")
+    else if isPositionLong == false and direction1_strong <= 0 and direction2_strong <= 0 and direction3_strong > 0
+        alert("Stronger underlying indication to close SHORT position")
+
+    if isPositionLong == true and direction1_strong >= 0 and direction2_strong < 0 and direction3_strong < 0
+        alert("Light underlying indication to close opned LONG position")
+    else if isPositionLong == true and direction1_strong >= 0 and direction2_strong >= 0 and direction3_strong < 0
+        alert("Stronger underlying indication to close LONG position")
+
+
+
+
+
+
+
+
+
+
+
