@@ -4,19 +4,28 @@
 //@version=5
 indicator("theIndicator-v2", overlay=true)
 
+
 // Predefined variables
 var longColor = color.green
 var shortColor = color.red
 
-// Adguments which can be changes from GUI
+
+
 st1_length = input.int(12, "ST1 ATR Period", minval=1)
 st1_mult = input.float(3.0, "ST1 ATR Multiplier", step=0.1, minval=0.1)
-st1_src = input(hl2, "Source")
-st1_wicks = input(true, "Take Wicks into Account ?")
-st1_showLabels = input(true, "Show Buy/Sell Labels ?")
-st1_highlightState = input(true, "Highlight State ?")
+st1_wicks = input(true, "Take supertrend1 wicks into account ?")
 
+st2_length = input.int(10, "ST2 ATR Period", minval=1)
+st2_mult = input.float(1.0, "ST2 ATR Multiplier", step=0.1, minval=0.1)
+st2_wicks = input(true, "Take supertrend2 wicks into account ?")
 
+st3_length = input.int(11, "ST3 ATR Period", minval=1)
+st3_mult = input.float(2.0, "ST3 ATR Multiplier", step=0.1, minval=0.1)
+st3_wicks = input(true, "Take supertrend3 wicks into account ?")
+
+second_timeframe = input.int(60, "Second timeframe for analyze", step=10, minval=10)
+
+src = input(hl2, "Super Trend source")
 
 
 averageTrueRange(multiplier, atrPeriod) =>
@@ -81,62 +90,140 @@ updateShortStop(src, wicks, multiplier, atrPeriod) =>
         prevShortStop
 
 
-var int dir = 1
-
-// Define your function
-calculateAndPlot(dir, highPrice, lowPrice, shortStopPrev, longStopPrev, longStop, shortStop, showLabels, highlightState) =>
-    // Update direction
-    dir := dir == -1 and highPrice > shortStopPrev ? 1 :
+// Function to calculate direction
+calculateDirection(dir, highPrice, lowPrice, shortStopPrev, longStopPrev) =>
+    dir_tmp = dir == -1 and highPrice > shortStopPrev ? 1 :
            dir == 1 and lowPrice < longStopPrev ? -1 :
            dir
+    dir_tmp
 
-    // Plotting logic
-    longColor = color.green
-    shortColor = color.red
-    longStopPlot = plot(dir == 1 ? longStop : na, "Long Stop", plot.style_linebr, 2, longColor)
-    shortStopPlot = plot(dir == 1 ? na : shortStop, "Short Stop", plot.style_linebr, 2, shortColor)
+// ============================================================== 1st ST indicator ===================================
+var int dir1 = 1
+at = averageTrueRange(st1_mult, st1_length)
+hPrice = highPrice(st1_wicks)
+lPrice = lowPrice(st1_wicks)
+dCandle = dojiCandle()
+lStop = updateLongStop(src,st1_wicks, st1_mult, st1_length)
+shStop = updateShortStop(src,st1_wicks, st1_mult, st1_length)
+lStopPrev = longStopPrev(lStop)
+shStopPrev = shortStopPrev(shStop)
+dir1 := calculateDirection(dir1, hPrice, lPrice, shStopPrev, lStopPrev)
 
-    buySignal = dir == 1 and dir[1] == -1
-    sellSignal = dir == -1 and dir[1] == 1
-    if showLabels
-        if buySignal
-            plotshape(longStop, "Buy Signal", location.absolute, shape.circle, size.tiny, longColor, 0, longStop)
-            plotshape(longStop, "Buy Label", location.absolute, shape.labelup, size.tiny, longColor, color.white, 0, "Buy")
-        if sellSignal
-            plotshape(shortStop, "Sell Signal", location.absolute, shape.circle, size.tiny, shortColor, 0, shortStop)
-            plotshape(shortStop, "Sell Label", location.absolute, shape.labeldown, size.tiny, shortColor, color.white, 0, "Sell")
+longStopPlot = plot(dir1 == 1 ? lStop : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+shortStopPlot = plot(dir1 == 1 ? na : shStop, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+direction1 = dir1
 
-    midPricePlot = plot(ohlc4, "", plot.style_circles, 0, na, display.none)
-    longFillColor = highlightState and dir == 1 ? color.new(longColor, 90) : na
-    shortFillColor = highlightState and dir == -1 ? color.new(shortColor, 90) : na
-    fill(midPricePlot, longStopPlot, longFillColor)
-    fill(midPricePlot, shortStopPlot, shortFillColor)
+// ============================================================== 2nd ST indicator ===================================
+var int dir2 = 1
+at := averageTrueRange(st2_mult, st2_length)
+hPrice := highPrice(st2_wicks)
+lPrice := lowPrice(st2_wicks)
+dCandle := dojiCandle()
+lStop := updateLongStop(src, st2_wicks, st2_mult, st2_length)
+shStop := updateShortStop(src,st2_wicks, st2_mult, st2_length)
+lStopPrev := longStopPrev(lStop)
+shStopPrev := shortStopPrev(shStop)
+dir2 := calculateDirection(dir2, hPrice, lPrice, shStopPrev, lStopPrev)
 
-    
+longStopPlot := plot(dir2 == 1 ? lStop : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+shortStopPlot := plot(dir2 == 1 ? na : shStop, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+direction2 = dir2
 
+// ============================================================== 3nd ST indicator ===================================
+var int dir3 = 1
+at := averageTrueRange(st3_mult, st3_length)
+hPrice := highPrice(st3_wicks)
+lPrice := lowPrice(st3_wicks)
+dCandle := dojiCandle()
+lStop := updateLongStop(src, st3_wicks, st3_mult, st3_length)
+shStop := updateShortStop(src, st3_wicks, st3_mult, st3_length)
+lStopPrev := longStopPrev(lStop)
+shStopPrev := shortStopPrev(shStop)
+dir3 := calculateDirection(dir3, hPrice, lPrice, shStopPrev, lStopPrev)
 
+longStopPlot := plot(dir3 == 1 ? lStop : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+shortStopPlot := plot(dir3 == 1 ? na : shStop, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+direction3 = dir3
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ======================= EMA 200
-
+// ================================================  EMA 200 =========================================================
 longest = ta.ema(close, 200)
-var color emaColor = color.blue
+var color emaColor = color.yellow
 plot(longest, color = emaColor)
+
+
+// ================================================ Analizes =========================================================
+
+// Analize main timeframe 
+var activePosition = false
+var activeColor = color.white
+var activeColorPrevState = color.white
+var isOpenPosition = false
+var isPositionLong = false
+
+activeColorPrevState := activeColor
+if direction1 > 0 and direction2 > 0 and direction3 > 0
+    activeColor := color.red
+    activePosition := true
+else if direction1 < 0 and direction2 < 0 and direction3 < 0
+    activeColor := color.green
+    activePosition := true
+else
+    activeColor := color.white
+    activePosition := false
+
+
+// Analyze second timeframe 
+// second_timeframe
+[trend1_second, direction1_second] = request.security(syminfo.tickerid, str.tostring(second_timeframe), ta.supertrend(st1_mult, st1_length))
+[trend2_second, direction2_second] = request.security(syminfo.tickerid, str.tostring(second_timeframe), ta.supertrend(st2_mult, st2_length))
+[trend3_second, direction3_second] = request.security(syminfo.tickerid, str.tostring(second_timeframe), ta.supertrend(st3_mult, st3_length))
+
+var underlyingLong = false
+var activePositionSecond = false
+
+
+if direction1_second > 0 and direction2_second > 0 and direction3_second > 0
+    underlyingLong := false
+    activePositionSecond := true
+else if direction1_second < 0 and direction2_second < 0 and direction3_second < 0
+    underlyingLong := true
+    activePositionSecond := true
+else
+    activePositionSecond := false
+    underlyingLong := false
+
+
+// ================================================ ALERTS =========================================================
+
+// Open and Close positions
+if activePosition == false and isOpenPosition == true and isPositionLong == false
+    isOpenPosition := false
+    alert("Close SHORT position on MAIN timeframe", alert.freq_once_per_bar)
+
+if activePosition == false and isOpenPosition == true and isPositionLong == true
+    isOpenPosition := false
+    alert("Close LONG position on MAIN timeframe", alert.freq_once_per_bar)
+
+if activePosition == true and activePositionSecond == true and activeColor == color.red and underlyingLong == false and isOpenPosition == false
+    isOpenPosition := true
+    isPositionLong := false
+    alert("Open SHORT position on MAIN timeframe", alert.freq_once_per_bar)
+
+if activePosition == true and activePositionSecond == true and activeColor == color.green and underlyingLong == true and isOpenPosition == false
+    isOpenPosition := true
+    isPositionLong := true
+    alert("Open LONG position on MAIN timeframe", alert.freq_once_per_bar)
+
+
+// Underlying deviations from active position
+if isOpenPosition
+    if isPositionLong == false and direction1_second <= 0 and direction2_second <= 0 and direction3_second > 0
+        alert("Light underlying indication to close opned SHORT position")
+    else if isPositionLong == false and direction1_second <= 0 and direction2_second <= 0 and direction3_second <= 0
+        alert("Stronger underlying indication to close SHORT position")
+
+    if isPositionLong == true and direction1_second >= 0 and direction2_second >= 0 and direction3_second < 0
+        alert("Light underlying indication to close opned LONG position")
+    else if isPositionLong == true and direction1_second >= 0 and direction2_second >= 0 and direction3_second >= 0
+        alert("Stronger underlying indication to close LONG position")
+
