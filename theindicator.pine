@@ -1,0 +1,216 @@
+//@version=4
+// Copyright (c) 2019-present, Alex Orekhov (everget)
+// SuperTrend script may be freely distributed under the terms of the GPL-3.0 license.
+study("SuperTrend", overlay=true)
+
+length = input(title="ATR Period", type=input.integer, defval=12)
+mult = input(title="ATR Multiplier", type=input.float, step=0.1, defval=3)
+src = input(title="Source", type=input.source, defval=hl2)
+wicks = input(title="Take Wicks into Account ?", type=input.bool, defval=true)
+showLabels = input(title="Show Buy/Sell Labels ?", type=input.bool, defval=true)
+highlightState = input(title="Highlight State ?", type=input.bool, defval=true)
+
+atr = mult * atr(length)
+
+highPrice = wicks ? high : close
+lowPrice = wicks ? low : close
+doji4price = open == close and open == low and open == high
+
+longStop = src - atr
+longStopPrev = nz(longStop[1], longStop)
+
+if longStop > 0
+    if doji4price
+        longStop := longStopPrev
+    else
+        longStop := (lowPrice[1] > longStopPrev ? max(longStop, longStopPrev) : longStop)
+else
+    longStop := longStopPrev
+
+shortStop = src + atr
+shortStopPrev = nz(shortStop[1], shortStop)
+
+if shortStop > 0
+    if doji4price
+        shortStop := shortStopPrev
+    else
+        shortStop := (highPrice[1] < shortStopPrev ? min(shortStop, shortStopPrev) : shortStop)
+else
+    shortStop := shortStopPrev
+
+var int dir = 1
+dir :=
+         dir == -1 and highPrice > shortStopPrev ? 1 :
+         dir == 1 and lowPrice < longStopPrev ? -1 :
+         dir
+
+var color longColor = color.green
+var color shortColor = color.red
+
+longStopPlot = plot(dir == 1 ? longStop : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+buySignal = dir == 1 and dir[1] == -1
+plotshape(buySignal ? longStop : na, title="Long Stop Start", location=location.absolute, style=shape.circle, size=size.tiny, color=longColor, transp=0)
+plotshape(buySignal and showLabels ? longStop : na, title="Buy Label", text="Buy", location=location.absolute, style=shape.labelup, size=size.tiny, color=longColor, textcolor=color.white, transp=0)
+
+shortStopPlot = plot(dir == 1 ? na : shortStop, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+sellSignal = dir == -1 and dir[1] == 1
+plotshape(sellSignal ? shortStop : na, title="Short Stop Start", location=location.absolute, style=shape.circle, size=size.tiny, color=shortColor, transp=0)
+plotshape(sellSignal and showLabels ? shortStop : na, title="Sell Label", text="Sell", location=location.absolute, style=shape.labeldown, size=size.tiny, color=shortColor, textcolor=color.white, transp=0)
+
+midPricePlot = plot(ohlc4, title="", style=plot.style_circles, linewidth=0, display=display.none, editable=false)
+
+longFillColor = highlightState ? (dir == 1 ? longColor : na) : na
+shortFillColor = highlightState ? (dir == -1 ? shortColor : na) : na
+fill(midPricePlot, longStopPlot, title="Long State Filling", color=longFillColor)
+fill(midPricePlot, shortStopPlot, title="Short State Filling", color=shortFillColor)
+
+// changeCond = dir != dir[1]
+// alertcondition(changeCond, title="Alert: SuperTrend Direction Change", message="SuperTrend has changed direction!\nSymbol: {{exchange}}:{{ticker}}\nPrice: {{close}}")
+// alertcondition(buySignal, title="Alert: SuperTrend Buy", message="SuperTrend Buy!\nSymbol: {{exchange}}:{{ticker}}\nPrice: {{close}}")
+// alertcondition(sellSignal, title="Alert: SuperTrend Sell", message="SuperTrend Sell!\nSymbol: {{exchange}}:{{ticker}}\nPrice: {{close}}")
+
+// ===========================
+
+length1 = input(title="ATR Period", type=input.integer, defval=10)
+mult1 = input(title="ATR Multiplier", type=input.float, step=0.1, defval=1)
+src1 = input(title="Source", type=input.source, defval=hl2)
+wicks1 = input(title="Take Wicks into Account ?", type=input.bool, defval=true)
+showLabels1 = input(title="Show Buy/Sell Labels ?", type=input.bool, defval=true)
+highlightState1 = input(title="Highlight State ?", type=input.bool, defval=true)
+
+atr1 = mult1 * atr(length1)
+
+highPrice1 = wicks1 ? high : close
+lowPrice1 = wicks1 ? low : close
+doji4price1 = open == close and open == low and open == high
+
+longStop1 = src1 - atr1
+longStopPrev1 = nz(longStop1[1], longStop1)
+
+if longStop1 > 0
+    if doji4price1
+        longStop1 := longStopPrev1
+    else
+        longStop1 := (lowPrice1[1] > longStopPrev1 ? max(longStop1, longStopPrev1) : longStop1)
+else
+    longStop1 := longStopPrev1
+
+shortStop1 = src1 + atr1
+shortStopPrev1 = nz(shortStop1[1], shortStop1)
+
+if shortStop1 > 0
+    if doji4price1
+        shortStop1 := shortStopPrev1
+    else
+        shortStop1 := (highPrice1[1] < shortStopPrev1 ? min(shortStop1, shortStopPrev1) : shortStop1)
+else
+    shortStop1 := shortStopPrev1
+
+var int dir1 = 1
+dir1 :=
+         dir1 == -1 and highPrice1 > shortStopPrev1 ? 1 :
+         dir1 == 1 and lowPrice1 < longStopPrev1 ? -1 :
+         dir1
+
+var color longColor1 = color.green
+var color shortColor1 = color.red
+
+longStopPlot1 = plot(dir1 == 1 ? longStop1 : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor1)
+buySignal1 = dir1 == 1 and dir1[1] == -1
+plotshape(buySignal1 ? longStop1 : na, title="Long Stop Start", location=location.absolute, style=shape.circle, size=size.tiny, color=longColor1, transp=0)
+plotshape(buySignal1 and showLabels1 ? longStop1 : na, title="Buy Label", text="Buy", location=location.absolute, style=shape.labelup, size=size.tiny, color=longColor1, textcolor=color.white, transp=0)
+
+shortStopPlot1 = plot(dir1 == 1 ? na : shortStop1, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor1)
+sellSignal1 = dir1 == -1 and dir1[1] == 1
+plotshape(sellSignal1 ? shortStop1 : na, title="Short Stop Start", location=location.absolute, style=shape.circle, size=size.tiny, color=shortColor1, transp=0)
+plotshape(sellSignal1 and showLabels1 ? shortStop1 : na, title="Sell Label", text="Sell", location=location.absolute, style=shape.labeldown, size=size.tiny, color=shortColor1, textcolor=color.white, transp=0)
+
+midPricePlot1 = plot(ohlc4, title="", style=plot.style_circles, linewidth=0, display=display.none, editable=false)
+
+longFillColor1 = highlightState1 ? (dir1 == 1 ? longColor1 : na) : na
+shortFillColor1 = highlightState1 ? (dir1 == -1 ? shortColor1 : na) : na
+fill(midPricePlot1, longStopPlot1, title="Long State Filling", color=longFillColor1)
+fill(midPricePlot1, shortStopPlot1, title="Short State Filling", color=shortFillColor1)
+
+// changeCond1 = dir1 != dir1[1]
+// alertcondition(changeCond1, title="Alert: SuperTrend Direction Change", message="SuperTrend has changed direction!\nSymbol: {{exchange}}:{{ticker}}\nPrice: {{close}}")
+// alertcondition(buySignal1, title="Alert: SuperTrend Buy", message="SuperTrend Buy!\nSymbol: {{exchange}}:{{ticker}}\nPrice: {{close}}")
+// alertcondition(sellSignal1, title="Alert: SuperTrend Sell", message="SuperTrend Sell!\nSymbol: {{exchange}}:{{ticker}}\nPrice: {{close}}")
+
+
+
+// ===========================
+
+length2 = input(title="ATR Period", type=input.integer, defval=11)
+mult2 = input(title="ATR Multiplier", type=input.float, step=0.1, defval=2)
+src2 = input(title="Source", type=input.source, defval=hl2)
+wicks2 = input(title="Take Wicks into Account ?", type=input.bool, defval=true)
+showLabels2 = input(title="Show Buy/Sell Labels ?", type=input.bool, defval=true)
+highlightState2 = input(title="Highlight State ?", type=input.bool, defval=true)
+
+atr2 = mult2 * atr(length2)
+
+highPrice2 = wicks2 ? high : close
+lowPrice2 = wicks2 ? low : close
+doji4price2 = open == close and open == low and open == high
+
+longStop2 = src2 - atr2
+longStopPrev2 = nz(longStop2[1], longStop2)
+
+if longStop2 > 0
+    if doji4price2
+        longStop2 := longStopPrev2
+    else
+        longStop2 := (lowPrice2[1] > longStopPrev2 ? max(longStop2, longStopPrev2) : longStop2)
+else
+    longStop2 := longStopPrev2
+
+shortStop2 = src2 + atr2
+shortStopPrev2 = nz(shortStop2[1], shortStop2)
+
+if shortStop2 > 0
+    if doji4price2
+        shortStop2 := shortStopPrev2
+    else
+        shortStop2 := (highPrice2[1] < shortStopPrev2 ? min(shortStop2, shortStopPrev2) : shortStop2)
+else
+    shortStop2 := shortStopPrev2
+
+var int dir2 = 1
+dir2 :=
+         dir2 == -1 and highPrice2 > shortStopPrev2 ? 1 :
+         dir2 == 1 and lowPrice2 < longStopPrev2 ? -1 :
+         dir2
+
+var color longColor2 = color.green
+var color shortColor2 = color.red
+
+longStopPlot2 = plot(dir2 == 1 ? longStop2 : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor2)
+buySignal2 = dir2 == 1 and dir2[1] == -1
+plotshape(buySignal2 ? longStop2 : na, title="Long Stop Start", location=location.absolute, style=shape.circle, size=size.tiny, color=longColor2, transp=0)
+plotshape(buySignal2 and showLabels2 ? longStop2 : na, title="Buy Label", text="Buy", location=location.absolute, style=shape.labelup, size=size.tiny, color=longColor2, textcolor=color.white, transp=0)
+
+shortStopPlot2 = plot(dir2 == 1 ? na : shortStop2, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor2)
+sellSignal2 = dir2 == -1 and dir2[1] == 1
+plotshape(sellSignal2 ? shortStop2 : na, title="Short Stop Start", location=location.absolute, style=shape.circle, size=size.tiny, color=shortColor2, transp=0)
+plotshape(sellSignal2 and showLabels2 ? shortStop2 : na, title="Sell Label", text="Sell", location=location.absolute, style=shape.labeldown, size=size.tiny, color=shortColor2, textcolor=color.white, transp=0)
+
+midPricePlot2 = plot(ohlc4, title="", style=plot.style_circles, linewidth=0, display=display.none, editable=false)
+
+longFillColor2 = highlightState2 ? (dir2 == 1 ? longColor2 : na) : na
+shortFillColor2 = highlightState2 ? (dir2 == -1 ? shortColor2 : na) : na
+fill(midPricePlot2, longStopPlot2, title="Long State Filling", color=longFillColor2)
+fill(midPricePlot2, shortStopPlot2, title="Short State Filling", color=shortFillColor2)
+
+changeCond2 = dir2 != dir2[1]
+alertcondition(changeCond2, title="Alert: SuperTrend Direction Change", message="SuperTrend has changed direction!\nSymbol: {{exchange}}:{{ticker}}\nPrice: {{close}}")
+alertcondition(buySignal2, title="Alert: SuperTrend Buy", message="SuperTrend Buy!\nSymbol: {{exchange}}:{{ticker}}\nPrice: {{close}}")
+alertcondition(sellSignal2, title="Alert: SuperTrend Sell", message="SuperTrend Sell!\nSymbol: {{exchange}}:{{ticker}}\nPrice: {{close}}")
+
+// ======================= EMA 200
+
+longest = ema(close, 200)
+var color emaColor = color.blue
+plot(longest, color = emaColor)
+
+
