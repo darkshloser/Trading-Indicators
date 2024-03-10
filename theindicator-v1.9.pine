@@ -1,0 +1,188 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Author: dkovache
+
+//@version=5
+indicator("theIndicator-v1.9", overlay=true)
+
+
+// Predefined variables
+var longColor = color.green
+var shortColor = color.red
+
+
+
+st1_length = input.int(defval=12, title="ST1 ATR Period", minval=1)
+st1_mult = input.float(defval=3.0, title="ST1 ATR Multiplier", step=0.1, minval=0.1)
+st1_wicks = input(defval=true, title="Take supertrend1 wicks into account ?")
+
+st2_length = input.int(defval=10, title="ST2 ATR Period", minval=1)
+st2_mult = input.float(defval=1, title="ST2 ATR Multiplier", step=0.1, minval=0.1)
+st2_wicks = input(defval=true, title="Take supertrend2 wicks into account ?")
+
+st3_length = input.int(defval=11, title="ST3 ATR Period", minval=1)
+st3_mult = input.float(defval=2.0, title="ST3 ATR Multiplier", step=0.1, minval=0.1)
+st3_wicks = input(defval=true, title="Take supertrend3 wicks into account ?")
+
+second_timeframe = input.int(defval=60, title="Second timeframe for analyze", step=10, minval=10)
+
+src = input.source(defval=hl2, title="St1")
+src2 = input.source(defval=hl2, title="St2")
+src3 = input.source(defval=hl2, title="St3")
+// src = input(title="Source", type=input.source, defval=hl2)
+
+atr = st1_mult * ta.atr(st1_length)
+highPrice = st1_wicks ? high : close
+lowPrice = st1_wicks ? low : close
+dojiCandle = open == close and open == low and open == high
+
+longStop = src - atr
+longStopPrev = nz(longStop[1], longStop)
+
+if longStop > 0
+    if dojiCandle
+        longStop := longStopPrev
+    else
+        longStop := (lowPrice[1] > longStopPrev ? math.max(longStop, longStopPrev) : longStop)
+else
+    longStop := longStopPrev
+
+
+shortStop = src + atr
+shortStopPrev = nz(shortStop[1], shortStop)
+
+if shortStop > 0
+    if dojiCandle
+        shortStop := shortStopPrev
+    else
+        shortStop := (highPrice[1] < shortStopPrev ? math.min(shortStop, shortStopPrev) : shortStop)
+else
+    shortStop := shortStopPrev
+
+var int dir = 1
+dir :=
+         dir == -1 and highPrice > shortStopPrev ? 1 :
+         dir == 1 and lowPrice < longStopPrev ? -1 :
+         dir
+
+plot(dir == 1 ? longStop : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+plot(dir == 1 ? na : shortStop, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+
+
+// ===========================
+atr2 = st2_mult * ta.atr(st2_length)
+highPrice2 = st2_wicks ? high : close
+lowPrice2 = st2_wicks ? low : close
+dojiCandle := open == close and open == low and open == high
+
+longStop2 = src2 - atr2
+longStopPrev2 = nz(longStop2[1], longStop2)
+
+if longStop2 > 0
+    if dojiCandle
+        longStop2 := longStopPrev2
+    else
+        longStop2 := (lowPrice2[1] > longStopPrev2 ? math.max(longStop2, longStopPrev2) : longStop2)
+else
+    longStop2 := longStopPrev2
+
+
+shortStop2 = src2 + atr2 
+shortStopPrev2 = nz(shortStop2[1], shortStop2)
+
+if shortStop2 > 0
+    if dojiCandle 
+        shortStop2 := shortStopPrev2
+    else
+        shortStop2 := (highPrice2[1] < shortStopPrev2 ? math.min(shortStop2, shortStopPrev2) : shortStop2)
+else
+    shortStop2 := shortStopPrev2
+
+var int dir2 = 1
+dir2 :=
+         dir2 == -1 and highPrice2 > shortStopPrev2 ? 1 :
+         dir2 == 1 and lowPrice2 < longStopPrev2 ? -1 :
+         dir2
+
+plot(dir2 == 1 ? longStop2 : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+plot(dir2 == 1 ? na : shortStop2, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+
+
+// ===========================
+atr3 = st3_mult * ta.atr(st3_length)
+highPrice3 = st3_wicks ? high : close
+lowPrice3 = st3_wicks ? low : close
+dojiCandle := open == close and open == low and open == high
+
+
+longStop3 = src3 - atr3
+longStopPrev3 = nz(longStop3[1], longStop3)
+
+if longStop3 > 0
+    if dojiCandle
+        longStop3 := longStopPrev3
+    else
+        longStop3 := (lowPrice3[1] > longStopPrev3 ? math.max(longStop3, longStopPrev3) : longStop3)
+else
+    longStop3 := longStopPrev3
+
+
+shortStop3 = src3 + atr3 
+shortStopPrev3 = nz(shortStop3[1], shortStop3)
+
+if shortStop3 > 0
+    if dojiCandle 
+        shortStop3 := shortStopPrev3
+    else
+        shortStop3 := (highPrice3[1] < shortStopPrev3 ? math.min(shortStop3, shortStopPrev3) : shortStop3)
+else
+    shortStop3 := shortStopPrev3
+
+var int dir3 = 1
+dir3 :=
+         dir3 == -1 and highPrice3 > shortStopPrev3 ? 1 :
+         dir3 == 1 and lowPrice3 < longStopPrev3 ? -1 :
+         dir3
+
+
+plot(dir3 == 1 ? longStop3 : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+plot(dir3 == 1 ? na : shortStop3, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+
+
+// ===========================================  MAIN timeframe analyze =======================
+var activePosition = false
+var activeColor = color.blue
+var activeColorPrevState = color.blue
+
+var isOpenPosition = false
+var isPositionLong = false
+
+bool conditionEntered = false
+
+// Update the status of the previouse bar
+activeColorPrevState := activeColor
+
+
+if dir > 0 and dir2 > 0 and dir3 > 0
+    if not isOpenPosition
+        activeColor := color.green
+        activePosition := true
+        isOpenPosition := true
+        conditionEntered := true
+    else
+        conditionEntered := false
+else if dir < 0 and dir2 < 0 and dir3 < 0
+    if not isOpenPosition
+        activeColor := color.red
+        activePosition := true
+        isOpenPosition := true
+        conditionEntered := true
+    else
+        conditionEntered := false
+else
+    activeColor := color.blue
+    activePosition := false
+    isOpenPosition := false
+    conditionEntered := false
+
+plotshape(series=conditionEntered and activeColor == color.green, title="Signal", location=location.belowbar, color=longColor, style=shape.triangleup, size=size.small)
+plotshape(series=conditionEntered and activeColor == color.red, title="Signal", location=location.abovebar, color=shortColor, style=shape.triangledown, size=size.small)

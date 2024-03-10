@@ -1,0 +1,78 @@
+atr             ->  averageTrueRange(multiplier, atrPeriod)
+
+highPrice       ->  highPrice(wicks)
+
+lowPrice        ->  lowPrice(wicks)
+
+doji4price      ->  dojiCandle()
+
+longStop        ->  longStop(src, averageTrueRange)
+
+longStopPrev    ->  longStopPrev(longStop)
+
+
+if longStop > 0                               -->  updateLongStop(src, wicks, multiplier, atrPeriod)
+    if doji4price
+        longStop := longStopPrev
+    else
+        longStop := (lowPrice[1] > longStopPrev ? max(longStop, longStopPrev) : longStop)
+else
+    longStop := longStopPrev
+
+shortStop       ->  shortStop(src, averageTrueRange)
+
+shortStopPrev   ->  shortStopPrev(shortStop)
+
+if shortStop > 0                               -->  updateShortStop(src, wicks, multiplier, atrPeriod)
+    if doji4price
+        shortStop := shortStopPrev
+    else
+        shortStop := (highPrice[1] < shortStopPrev ? min(shortStop, shortStopPrev) : shortStop)
+else
+    shortStop := shortStopPrev
+
+dir             ->  
+
+
+
+
+
+
+
+===========================================================
+atr = mult * atr(length)
+
+highPrice = wicks ? high : close
+lowPrice = wicks ? low : close
+doji4price = open == close and open == low and open == high
+
+longStop = src - atr
+longStopPrev = nz(longStop[1], longStop)
+
+if longStop > 0
+    if doji4price
+        longStop := longStopPrev
+    else
+        longStop := (lowPrice[1] > longStopPrev ? max(longStop, longStopPrev) : longStop)
+else
+    longStop := longStopPrev
+
+shortStop = src + atr
+shortStopPrev = nz(shortStop[1], shortStop)
+
+if shortStop > 0
+    if doji4price
+        shortStop := shortStopPrev
+    else
+        shortStop := (highPrice[1] < shortStopPrev ? min(shortStop, shortStopPrev) : shortStop)
+else
+    shortStop := shortStopPrev
+
+var int dir = 1
+dir :=
+         dir == -1 and highPrice > shortStopPrev ? 1 :
+         dir == 1 and lowPrice < longStopPrev ? -1 :
+         dir
+
+var color longColor = color.green
+var color shortColor = color.red

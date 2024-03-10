@@ -1,7 +1,7 @@
 //@version=4
 // Copyright (c) 2019-present, Alex Orekhov (everget)
 // SuperTrend script may be freely distributed under the terms of the GPL-3.0 license.
-study("SuperTrend", overlay=true)
+study("SuperTrend-original", overlay=true)
 
 length = input(title="ATR Period", type=input.integer, defval=12)
 mult = input(title="ATR Multiplier", type=input.float, step=0.1, defval=3)
