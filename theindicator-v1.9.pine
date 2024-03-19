@@ -10,7 +10,6 @@ var longColor = color.green
 var shortColor = color.red
 
 
-
 st1_length = input.int(defval=12, title="ST1 ATR Period", minval=1)
 st1_mult = input.float(defval=3.0, title="ST1 ATR Multiplier", step=0.1, minval=0.1)
 st1_wicks = input(defval=true, title="Take supertrend1 wicks into account ?")

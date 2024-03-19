@@ -1,0 +1,362 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © Author: dkovache
+
+//@version=5
+indicator("SuperChandelierIndicator", overlay=true)
+
+//============================================================================================================
+// Constants
+//============================================================================================================
+var longColor = color.green
+var shortColor = color.red
+
+//============================================================================================================
+// Variables to be set by GUI
+//============================================================================================================
+st1_length = input.int(defval=12, title="ST1 ATR Period", minval=1)
+st1_mult = input.float(defval=3.0, title="ST1 ATR Multiplier", step=0.1, minval=0.1)
+st1_wicks = input(defval=true, title="Take supertrend1 wicks into account ?")
+
+st2_length = input.int(defval=10, title="ST2 ATR Period", minval=1)
+st2_mult = input.float(defval=1, title="ST2 ATR Multiplier", step=0.1, minval=0.1)
+st2_wicks = input(defval=true, title="Take supertrend2 wicks into account ?")
+
+st3_length = input.int(defval=11, title="ST3 ATR Period", minval=1)
+st3_mult = input.float(defval=2.0, title="ST3 ATR Multiplier", step=0.1, minval=0.1)
+st3_wicks = input(defval=true, title="Take supertrend3 wicks into account ?")
+
+src = input.source(defval=hl2, title="St1")
+src2 = input.source(defval=hl2, title="St2")
+src3 = input.source(defval=hl2, title="St3")
+
+// Second timezone
+second_timeframe = input.int(defval=60, title="Second timeframe for analyze", step=10, minval=10)
+
+
+//============================================================================================================
+// Calculations for the first Supertrend indicator on main timeframe
+//============================================================================================================
+atr = st1_mult * ta.atr(st1_length)
+highPrice = st1_wicks ? high : close
+lowPrice = st1_wicks ? low : close
+dojiCandle = open == close and open == low and open == high
+
+longStop = src - atr
+longStopPrev = nz(longStop[1], longStop)
+
+if longStop > 0
+    if dojiCandle
+        longStop := longStopPrev
+    else
+        longStop := (lowPrice[1] > longStopPrev ? math.max(longStop, longStopPrev) : longStop)
+else
+    longStop := longStopPrev
+
+
+shortStop = src + atr
+shortStopPrev = nz(shortStop[1], shortStop)
+
+if shortStop > 0
+    if dojiCandle
+        shortStop := shortStopPrev
+    else
+        shortStop := (highPrice[1] < shortStopPrev ? math.min(shortStop, shortStopPrev) : shortStop)
+else
+    shortStop := shortStopPrev
+
+var int dir = 1
+dir :=
+         dir == -1 and highPrice > shortStopPrev ? 1 :
+         dir == 1 and lowPrice < longStopPrev ? -1 :
+         dir
+
+plot(dir == 1 ? longStop : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+plot(dir == 1 ? na : shortStop, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+
+
+//============================================================================================================
+// Calculations for the second Supertrend indicator on main timeframe
+//============================================================================================================
+atr2 = st2_mult * ta.atr(st2_length)
+highPrice2 = st2_wicks ? high : close
+lowPrice2 = st2_wicks ? low : close
+dojiCandle := open == close and open == low and open == high
+
+longStop2 = src2 - atr2
+longStopPrev2 = nz(longStop2[1], longStop2)
+
+if longStop2 > 0
+    if dojiCandle
+        longStop2 := longStopPrev2
+    else
+        longStop2 := (lowPrice2[1] > longStopPrev2 ? math.max(longStop2, longStopPrev2) : longStop2)
+else
+    longStop2 := longStopPrev2
+
+
+shortStop2 = src2 + atr2 
+shortStopPrev2 = nz(shortStop2[1], shortStop2)
+
+if shortStop2 > 0
+    if dojiCandle 
+        shortStop2 := shortStopPrev2
+    else
+        shortStop2 := (highPrice2[1] < shortStopPrev2 ? math.min(shortStop2, shortStopPrev2) : shortStop2)
+else
+    shortStop2 := shortStopPrev2
+
+var int dir2 = 1
+dir2 :=
+         dir2 == -1 and highPrice2 > shortStopPrev2 ? 1 :
+         dir2 == 1 and lowPrice2 < longStopPrev2 ? -1 :
+         dir2
+
+plot(dir2 == 1 ? longStop2 : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+plot(dir2 == 1 ? na : shortStop2, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+
+
+//============================================================================================================
+// Calculations for the third Supertrend indicator on main timeframe
+//============================================================================================================
+atr3 = st3_mult * ta.atr(st3_length)
+highPrice3 = st3_wicks ? high : close
+lowPrice3 = st3_wicks ? low : close
+dojiCandle := open == close and open == low and open == high
+
+
+longStop3 = src3 - atr3
+longStopPrev3 = nz(longStop3[1], longStop3)
+
+if longStop3 > 0
+    if dojiCandle
+        longStop3 := longStopPrev3
+    else
+        longStop3 := (lowPrice3[1] > longStopPrev3 ? math.max(longStop3, longStopPrev3) : longStop3)
+else
+    longStop3 := longStopPrev3
+
+
+shortStop3 = src3 + atr3 
+shortStopPrev3 = nz(shortStop3[1], shortStop3)
+
+if shortStop3 > 0
+    if dojiCandle 
+        shortStop3 := shortStopPrev3
+    else
+        shortStop3 := (highPrice3[1] < shortStopPrev3 ? math.min(shortStop3, shortStopPrev3) : shortStop3)
+else
+    shortStop3 := shortStopPrev3
+
+var int dir3 = 1
+dir3 :=
+         dir3 == -1 and highPrice3 > shortStopPrev3 ? 1 :
+         dir3 == 1 and lowPrice3 < longStopPrev3 ? -1 :
+         dir3
+
+
+plot(dir3 == 1 ? longStop3 : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+plot(dir3 == 1 ? na : shortStop3, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
+
+
+//============================================================================================================
+// Calculations for the Supertrends in second timeframe
+//============================================================================================================
+calcSupertrend(_length, _mult, _wicks, _src) =>
+    _atr = _mult * ta.atr(_length)
+    _highPrice = _wicks ? request.security(syminfo.tickerid, str.tostring(second_timeframe), high) : request.security(syminfo.tickerid, str.tostring(second_timeframe), close)
+    _lowPrice = _wicks ? request.security(syminfo.tickerid, str.tostring(second_timeframe), low) : request.security(syminfo.tickerid, str.tostring(second_timeframe), close)
+    _dojiCandle = request.security(syminfo.tickerid, str.tostring(second_timeframe), open == close and open == low and open == high)
+
+    _longStop = _src - _atr
+    _longStopPrev = nz(_longStop[1], _longStop)
+
+    if _longStop > 0
+        if _dojiCandle
+            _longStop := _longStopPrev
+        else
+            _longStop := (_lowPrice[1] > _longStopPrev ? math.max(_longStop, _longStopPrev) : _longStop)
+    else
+        _longStop := _longStopPrev
+
+    _shortStop = _src + _atr
+    _shortStopPrev = nz(_shortStop[1], _shortStop)
+
+    if _shortStop > 0
+        if _dojiCandle
+            _shortStop := _shortStopPrev
+        else
+            _shortStop := (_highPrice[1] < _shortStopPrev ? math.min(_shortStop, _shortStopPrev) : _shortStop)
+    else
+        _shortStop := _shortStopPrev
+
+    _dir = 1
+    _dir :=
+             _dir == -1 and _highPrice > _shortStopPrev ? 1 :
+             _dir == 1 and _lowPrice < _longStopPrev ? -1 :
+             _dir
+
+    [_longStop, _shortStop, _dir]
+
+
+
+[longStop1_sec_timeframe, shortStop1_sec_timeframe, dir1_sec_timeframe] = calcSupertrend(st1_length, st1_mult, st1_wicks, src)
+[longStop2_sec_timeframe, shortStop2_sec_timeframe, dir2_sec_timeframe] = calcSupertrend(st2_length, st2_mult, st2_wicks, src2)
+[longStop3_sec_timeframe, shortStop3_sec_timeframe, dir3_sec_timeframe] = calcSupertrend(st3_length, st3_mult, st3_wicks, src3)
+
+
+//============================================================================================================
+// Calculate Chandelier Exit 
+//============================================================================================================
+
+var string calcGroup = 'Calculation Chandelier Exit'
+length_chandelier = input.int(title='ATR Period', defval=1, group=calcGroup)
+mult_chandelier = input.float(title='ATR Multiplier', step=0.1, defval=2.0, group=calcGroup)
+useClose_chandelier = input.bool(title='Use Close Price for Extremums', defval=true, group=calcGroup)
+
+showLabels_chandelier = input.bool(title='Show Buy/Sell Labels', defval=true, group=calcGroup)
+highlightState_chandelier = input.bool(title='Highlight State', defval=true, group=calcGroup)
+
+awaitBarConfirmation_chandelier = input.bool(title="Await Bar Confirmation", defval=true, group=calcGroup)
+
+atr_chandelier = mult_chandelier * ta.atr(length_chandelier)
+
+longStop_chandelier = (useClose_chandelier ? ta.highest(close, length_chandelier) : ta.highest(length_chandelier)) - atr_chandelier
+longStopPrev_chandelier = nz(longStop_chandelier[1], longStop_chandelier)
+longStop_chandelier := close[1] > longStopPrev_chandelier ? math.max(longStop_chandelier, longStopPrev_chandelier) : longStop_chandelier
+
+shortStop_chandelier = (useClose_chandelier ? ta.lowest(close, length_chandelier) : ta.lowest(length_chandelier)) + atr_chandelier
+shortStopPrev_chandelier = nz(shortStop_chandelier[1], shortStop_chandelier)
+shortStop_chandelier := close[1] < shortStopPrev_chandelier ? math.min(shortStop_chandelier, shortStopPrev_chandelier) : shortStop_chandelier
+
+
+
+var int dir_chandelier = 1
+dir_chandelier := close > shortStopPrev_chandelier ? 1 : close < longStopPrev_chandelier ? -1 : dir_chandelier
+
+var color textColor = color.new(color.white, 0)
+
+longStopPlot_chandelier = plot(dir_chandelier == 1 ? longStop_chandelier : na, title='Long Stop', style=plot.style_linebr, linewidth=2, color=color.new(longColor, 0))
+buySignal_chandelier = dir_chandelier == 1 and dir_chandelier[1] == -1
+plotshape(buySignal_chandelier ? longStop_chandelier : na, title='Long Stop Start', location=location.absolute, style=shape.circle, size=size.tiny, color=color.new(longColor, 0))
+plotshape(buySignal_chandelier and showLabels_chandelier ? longStop_chandelier : na, title='Buy Label', text='Buy', location=location.absolute, style=shape.labelup, size=size.tiny, color=color.new(longColor, 0), textcolor=textColor)
+
+shortStopPlot_chandelier = plot(dir_chandelier == 1 ? na : shortStop_chandelier, title='Short Stop', style=plot.style_linebr, linewidth=2, color=color.new(shortColor, 0))
+sellSignal_chandelier = dir_chandelier == -1 and dir_chandelier[1] == 1
+plotshape(sellSignal_chandelier ? shortStop_chandelier : na, title='Short Stop Start', location=location.absolute, style=shape.circle, size=size.tiny, color=color.new(shortColor, 0))
+plotshape(sellSignal_chandelier and showLabels_chandelier ? shortStop_chandelier : na, title='Sell Label', text='Sell', location=location.absolute, style=shape.labeldown, size=size.tiny, color=color.new(shortColor, 0), textcolor=textColor)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ======================= Analyzes ==============================
+// // Analize main timeframe 
+// var activePosition = false
+// var activeColor = color.white
+// var activeColorPrevState = color.white
+// var isOpenPosition = false
+// var isPositionLong = false
+
+// activeColorPrevState := activeColor
+// if direction1 > 0 and direction2 > 0 and direction3 > 0
+//     activeColor := color.red
+//     activePosition := true
+// else if direction1 < 0 and direction2 < 0 and direction3 < 0
+//     activeColor := color.green
+//     activePosition := true
+// else
+//     activeColor := color.white
+//     activePosition := false
+
+
+// // Analyze second timeframe 
+// // second_timeframe
+// [trend1_second_timeframe, dir1_second_timeframe] = request.security(syminfo.tickerid, str.tostring(second_timeframe), ta.supertrend(st1_mult, st1_length))
+// [trend2_second_timeframe, dir2_second_timeframe] = request.security(syminfo.tickerid, str.tostring(second_timeframe), ta.supertrend(st2_mult, st2_length))
+// [trend3_second_timeframe, dir3_second_timeframe] = request.security(syminfo.tickerid, str.tostring(second_timeframe), ta.supertrend(st3_mult, st3_length))
+
+// var underlyingLong = false
+// var activePositionSecond = false
+
+
+// if dir1_second_timeframe > 0 and dir2_second_timeframe > 0 and dir3_second_timeframe > 0
+//     underlyingLong := false
+//     activePositionSecond := true
+// else if dir1_second_timeframe < 0 and dir2_second_timeframe < 0 and dir3_second_timeframe < 0
+//     underlyingLong := true
+//     activePositionSecond := true
+// else
+//     activePositionSecond := false
+//     underlyingLong := false
+
+
+
+
+// ===========================================  MAIN timeframe analyze =======================
+// var activePosition = false
+// var activeColor = color.blue
+// var activeColorPrevState = color.blue
+
+// var isOpenPosition = false
+// var isPositionLong = false
+
+// bool conditionEntered = false
+
+// // Update the status of the previouse bar
+// activeColorPrevState := activeColor
+
+
+// if dir > 0 and dir2 > 0 and dir3 > 0
+//     if not isOpenPosition
+//         activeColor := color.green
+//         activePosition := true
+//         isOpenPosition := true
+//         conditionEntered := true
+//     else
+//         conditionEntered := false
+// else if dir < 0 and dir2 < 0 and dir3 < 0
+//     if not isOpenPosition
+//         activeColor := color.red
+//         activePosition := true
+//         isOpenPosition := true
+//         conditionEntered := true
+//     else
+//         conditionEntered := false
+// else
+//     activeColor := color.blue
+//     activePosition := false
+//     isOpenPosition := false
+//     conditionEntered := false
+
+// plotshape(series=conditionEntered and activeColor == color.green, title="Signal", location=location.belowbar, color=longColor, style=shape.triangleup, size=size.small)
+// plotshape(series=conditionEntered and activeColor == color.red, title="Signal", location=location.abovebar, color=shortColor, style=shape.triangledown, size=size.small)
+
+
+
+
+
+
+
+// conditionLong = dir > 0 and dir2 > 0 and dir3 > 0
+// // Plot a shape on the chart based on the condition
+// plotshape(series=conditionLong, title="Up Signal", location=location.belowbar, color=color.green, style=shape.triangleup, size=size.small)
+
+// conditionShort = dir < 0 and dir2 < 0 and dir3 < 0
+// // Plot a shape on the chart based on the condition
+// plotshape(series=conditionShort, title="Down Signal", location=location.abovebar, color=color.red, style=shape.triangledown, size=size.small)
+
+
+
+
+
+
+
