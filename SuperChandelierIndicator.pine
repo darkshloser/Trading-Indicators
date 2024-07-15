@@ -259,7 +259,6 @@ condition_to_buy = dir == 1 and dir2 == 1 and dir3 == 1 and dir_chandelier == 1
 condition_to_sell = dir == -1 and dir2 == -1 and dir3 == -1 and dir_chandelier == -1
 condition_to_close = not condition_to_buy and not condition_to_sell
 
-
 plot(condition_to_buy ? longStop_chandelier : na , style=plot.style_linebr, linewidth=4, color=color.new(color.blue, 0),  title="Buy")
 plot(condition_to_sell ? shortStop_chandelier : na , style=plot.style_linebr, linewidth=4, color=color.new(color.purple, 0), title="Sell")
 
@@ -267,8 +266,9 @@ plot(condition_to_sell ? shortStop_chandelier : na , style=plot.style_linebr, li
 //============================================================================================================
 // Alerts
 //============================================================================================================
-alertcondition(condition_to_buy, title="Alert: Buy", message="Symbol: {{exchange}}:{{ticker}}")
-alertcondition(condition_to_sell, title="Alert: Sell", message="Symbol: {{exchange}}:{{ticker}}")
+alertcondition(condition_to_buy and not condition_to_buy[1], title="Alert: Buy", message="Symbol: {{exchange}}:{{ticker}}")
+alertcondition(condition_to_sell and not condition_to_sell[1], title="Alert: Sell", message="Symbol: {{exchange}}:{{ticker}}")
+alertcondition(condition_to_close and not condition_to_close[1], title="Alert: Close position", message="Symbol: {{exchange}}:{{ticker}}")
 
 
 
