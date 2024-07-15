@@ -247,17 +247,44 @@ plotshape(sellSignal_chandelier and showLabels_chandelier ? shortStop_chandelier
 
 
 
+//============================================================================================================
+//============================================================================================================
+//
+//                                                ANALYZES
+//
+//============================================================================================================
+//============================================================================================================
+
+condition_to_buy = dir == 1 and dir2 == 1 and dir3 == 1 and dir_chandelier == 1
+condition_to_sell = dir == -1 and dir2 == -1 and dir3 == -1 and dir_chandelier == -1
+condition_to_close = not condition_to_buy and not condition_to_sell
+
+
+plot(condition_to_buy ? longStop_chandelier : na , style=plot.style_linebr, linewidth=4, color=color.new(color.blue, 0),  title="Buy")
+plot(condition_to_sell ? shortStop_chandelier : na , style=plot.style_linebr, linewidth=4, color=color.new(color.purple, 0), title="Sell")
+
+
+//============================================================================================================
+// Alerts
+//============================================================================================================
+alertcondition(condition_to_buy, title="Alert: Buy", message="Symbol: {{exchange}}:{{ticker}}")
+alertcondition(condition_to_sell, title="Alert: Sell", message="Symbol: {{exchange}}:{{ticker}}")
 
 
 
 
 
 
+// Plot new line in yellow when condition is met
+// plot(dir_chandelier == 1 ? na : shortStop_chandelier, title='Short Stop', style=plot.style_linebr, linewidth=2, color=color.new(shortColor, 0))
+// test = plot(condition_to_sell ? na : shortStop_chandelier, style=plot.style_linebr, linewidth=4, color=color.new(color.yellow, 0), title="New Line")
+
+// plot(condition_to_buy ? shortStop_chandelier : na , style=plot.style_linebr, linewidth=4, color=color.new(color.yellow, 0), title="New Line")
 
 
 
-
-
+// label.new(x=bar_index, y=high + 9, text=str.tostring(dir_chandelier), style=label.style_label_down, color=color.red, textcolor=color.black, size=size.small)
+// label.new(x=bar_index, y=high + 12, text=str.tostring(dir3), style=label.style_label_down, color=color.red, textcolor=color.black, size=size.small)
 // ======================= Analyzes ==============================
 // // Analize main timeframe 
 // var activePosition = false

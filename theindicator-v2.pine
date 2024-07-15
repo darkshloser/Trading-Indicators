@@ -106,10 +106,7 @@ dCandle = dojiCandle()
 lStop = updateLongStop(src,st1_wicks, st1_mult, st1_length)
 shStop = updateShortStop(src,st1_wicks, st1_mult, st1_length)
 lStopPrev = longStopPrev(lStop)
-shStopPrev = shortStopPrev(shStop)
-dir1 := calculateDirection(dir1, hPrice, lPrice, shStopPrev, lStopPrev)
-
-longStopPlot = plot(dir1 == 1 ? lStop : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
+== 1 ? lStop : na, title="Long Stop", style=plot.style_linebr, linewidth=2, color=longColor)
 shortStopPlot = plot(dir1 == 1 ? na : shStop, title="Short Stop", style=plot.style_linebr, linewidth=2, color=shortColor)
 direction1 = dir1
 
